@@ -1,0 +1,57 @@
+
+name: Build TMAX PROJECT APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.4
+
+    steps:
+      - name: Get project
+        uses: actions/checkout@v4
+
+      - name: Extract game files
+        run: |
+          unzip TMAX_PROJECT_source.zip -d unpacked
+          cd unpacked/TMAX_PROJECT
+          test -f project.godot
+
+      - name: Prepare Android export
+        run: |
+          cd unpacked/TMAX_PROJECT
+          cat > export_presets.cfg <<'EOF'
+          [preset.0]
+          name="Android"
+          platform="Android"
+          runnable=true
+          dedicated_server=false
+          export_filter="all_resources"
+          include_filter=""
+          exclude_filter=""
+          export_path="build/TMAX_PROJECT.apk"
+
+          [preset.0.options]
+          custom_template/debug=""
+          custom_template/release=""
+          package/unique_name="org.example.tmaxproject"
+          package/name="TMAX PROJECT"
+          package/signed=true
+          EOF
+          mkdir -p build
+
+      - name: Build APK
+        run: |
+          cd unpacked/TMAX_PROJECT
+          godot --headless --path . --export-debug "Android" build/TMAX_PROJECT.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TMAX-PROJECT-APK
+          path: unpacked/TMAX_PROJECT/build/TMAX_PROJECT.apk
