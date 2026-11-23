@@ -45,6 +45,12 @@ jobs:
           EOF
           mkdir -p build
 
+        - name: Setup Android tools
+          run: |
+            sdkmanager --install "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+            yes | sdkmanager --licenses
+            adb start-server
+
       - name: Build APK
         run: |
           cd unpacked/TMAX_PROJECT
